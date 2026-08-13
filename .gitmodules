@@ -1,0 +1,3 @@
+[submodule "sblib"]
+	path = sblib
+	url = https://github.com/benshaies/sblib.git
