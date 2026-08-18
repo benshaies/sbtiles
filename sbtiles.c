@@ -1,4 +1,4 @@
-#include "sbTiles.h"
+#include "sbtiles.h"
 #include <raylib.h>
 #include <stdio.h>
 

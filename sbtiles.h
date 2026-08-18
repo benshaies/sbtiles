@@ -24,6 +24,7 @@ typedef struct {
   Rectangle tileSelectionRec;
 
 } SBTILES;
+extern SBTILES sbt;
 
 // Initialize sbTiles struct
 void SBTILES_Init(int windowWidth, int windowHeight);
