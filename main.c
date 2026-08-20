@@ -10,7 +10,12 @@
 const int screenWidth = 1280;
 const int screenHeight = 720;
 
-typedef enum { NOT_SELECTED, BROWSING, SELECTED } Level_Selection_State;
+typedef enum {
+  NOT_SELECTED,
+  BROWSING,
+  LOADING_FILE,
+  EDITING
+} Level_Selection_State;
 
 Level_Selection_State state = NOT_SELECTED;
 
@@ -19,6 +24,7 @@ Vector2 mousePos;
 
 SB_Level level;
 char levelFilePath[256];
+char tilesetFilePath[256];
 char currentDir[256] = "/home/benja/";
 
 typedef struct {
@@ -167,13 +173,34 @@ void update() {
     int i = updateFileSelection();
 
     if (i == 1) {
-      state = SELECTED;
+      state = LOADING_FILE;
       printf(levelFilePath);
       printf("\n");
     }
     break;
-  case SELECTED:
-    SB_Level_Load(levelFilePath);
+  case LOADING_FILE:
+    level = SB_Level_Load(levelFilePath, true);
+    char oneUp[256];
+    strncpy(oneUp, GetDirectoryPath(levelFilePath), sizeof(oneUp) - 1);
+    oneUp[sizeof(oneUp) - 1] = '\0';
+
+    char twoUp[256];
+    strncpy(twoUp, GetDirectoryPath(oneUp), sizeof(twoUp) - 1);
+    twoUp[sizeof(twoUp) - 1] = '\0';
+    strcpy(tilesetFilePath, twoUp);
+
+    strcat(tilesetFilePath, "/assets/");
+    printf("CURRENT PATH:");
+    printf(level.tileset.fileName);
+    printf("\n");
+    strcat(tilesetFilePath, level.tileset.fileName);
+
+    level.tileset.texture = LoadTexture(tilesetFilePath);
+    level.tileset.cols = level.tileset.texture.width / level.tileset.tileSize;
+    level.tileset.rows = level.tileset.texture.height / level.tileset.tileSize;
+
+    state = EDITING;
+
     break;
   }
 }
@@ -191,7 +218,7 @@ void draw() {
   case BROWSING:
     drawFileSelection();
     break;
-  case SELECTED:
+  case LOADING_FILE:
     break;
   }
 
