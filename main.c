@@ -18,14 +18,13 @@ RenderTexture2D target;
 Vector2 mousePos;
 
 SB_Level level;
-char filePath[256];
-char currentDir[256] = "/home/benja/MyGames";
+char levelFilePath[256];
+char currentDir[256] = "/home/benja/";
 
 typedef struct {
   bool firstStart;
   char *names[256];
-  int arraySize;
-  bool showHiddenDirectories;
+  int lastIndex;
   int highlightedDir;
 } DirectoryFolderNames;
 
@@ -41,10 +40,10 @@ void reloadDirectory(const char *directory) {
 
   // free and reset names array
   if (!directoryNames.firstStart) {
-    for (int i = 0; i < directoryNames.arraySize; i++) {
+    for (int i = 0; i < directoryNames.lastIndex; i++) {
       free(directoryNames.names[i]);
       directoryNames.names[i] = NULL;
-      directoryNames.arraySize = -1;
+      directoryNames.lastIndex = -1;
       directoryNames.highlightedDir = 0;
     }
   } else {
@@ -60,39 +59,49 @@ void reloadDirectory(const char *directory) {
         continue;
       }
 
-      directoryNames.arraySize++;
+      directoryNames.lastIndex++;
       int fileLenght = strlen(filesName);
-      directoryNames.names[directoryNames.arraySize] =
+      directoryNames.names[directoryNames.lastIndex] =
           malloc(fileLenght * sizeof(char));
-      strcpy(directoryNames.names[directoryNames.arraySize], filesName);
+      strcpy(directoryNames.names[directoryNames.lastIndex], filesName);
 
-    } else if () {
+    } else if (IsFileExtension(filesName, ".sblevel")) {
 
-      directoryNames.arraySize++;
+      directoryNames.lastIndex++;
       int fileLenght = strlen(filesName);
-      directoryNames.names[directoryNames.arraySize] =
+      directoryNames.names[directoryNames.lastIndex] =
           malloc(fileLenght * sizeof(char));
-      strcpy(directoryNames.names[directoryNames.arraySize], filesName);
+      strcpy(directoryNames.names[directoryNames.lastIndex], filesName);
     }
   }
 }
 
 void drawFileSelection() {
-  for (int i = 0; i < directoryNames.arraySize; i++) {
+  for (int i = 0; i < directoryNames.lastIndex + 1; i++) {
 
+    DrawRectangle(0, 0, 200, 200, BLACK);
+    DrawText("j - down", 10, 10, 25, WHITE);
+    DrawText("k - up", 10, 50, 25, WHITE);
+    DrawText("l - select", 10, 90, 25, WHITE);
+    DrawText("b - back", 10, 130, 25, WHITE);
+
+    bool highlight = false;
     if (directoryNames.highlightedDir == i) {
-      DrawRectangle(270, i * 25 + 75, 25, 25, BLUE);
+      highlight = true;
     }
-    DrawText(directoryNames.names[i], 300, i * 25 + 75, 20, BLACK);
+
+    DrawText(directoryNames.names[i], 300, i * 25 + 75, 20,
+             highlight ? YELLOW : WHITE);
   }
 }
 
-void updateFileSelection() {
+// Returns 1 if .sblevel file is selected and found otherwise returns 0
+int updateFileSelection() {
 
   // Scroll Down
   if (IsKeyPressed(KEY_J)) {
-    if (directoryNames.highlightedDir == directoryNames.arraySize) {
-      directoryNames.highlightedDir = 1;
+    if (directoryNames.highlightedDir == directoryNames.lastIndex) {
+      directoryNames.highlightedDir = 0;
     } else {
       directoryNames.highlightedDir++;
     }
@@ -101,18 +110,50 @@ void updateFileSelection() {
   // Scroll Up
   if (IsKeyPressed(KEY_K)) {
     if (directoryNames.highlightedDir == 0) {
-      directoryNames.highlightedDir = directoryNames.arraySize - 1;
+      directoryNames.highlightedDir = directoryNames.lastIndex;
     } else {
       directoryNames.highlightedDir--;
     }
   }
 
-  // Change Directory
+  // Going into a directory
   if (IsKeyPressed(KEY_L)) {
-    strcat(currentDir, "/");
-    strcat(currentDir, directoryNames.names[directoryNames.highlightedDir]);
-    reloadDirectory(currentDir);
+    char temp[256];
+    strcpy(temp, currentDir);
+    strcat(temp, directoryNames.names[directoryNames.highlightedDir]);
+
+    // Check if its a file selection
+    if (!DirectoryExists(temp)) {
+      printf("FOUND .sblevel FILE!\n");
+      strcpy(levelFilePath, temp);
+      return 1;
+
+    } else {
+      strcat(currentDir, directoryNames.names[directoryNames.highlightedDir]);
+      strcat(currentDir, "/");
+      reloadDirectory(currentDir);
+    }
   }
+
+  if (IsKeyPressed(KEY_B)) {
+    int len = strlen(currentDir);
+    int lastSlashIndex;
+
+    for (int i = 0; i < len - 1; i++) {
+      if (currentDir[i] == '/') {
+        lastSlashIndex = i;
+      }
+    }
+
+    if (lastSlashIndex != 0) {
+      currentDir[lastSlashIndex + 1] = '\0';
+      reloadDirectory(currentDir);
+    } else {
+      printf("LAST DIRECTORY\n");
+    }
+  }
+
+  return 0;
 }
 
 void update() {
@@ -123,13 +164,16 @@ void update() {
     }
     break;
   case BROWSING:
-    if (IsKeyPressed(KEY_S)) {
-      directoryNames.showHiddenDirectories =
-          !directoryNames.showHiddenDirectories;
+    int i = updateFileSelection();
+
+    if (i == 1) {
+      state = SELECTED;
+      printf(levelFilePath);
+      printf("\n");
     }
-    updateFileSelection();
     break;
   case SELECTED:
+    SB_Level_Load(levelFilePath);
     break;
   }
 }
@@ -137,11 +181,12 @@ void update() {
 void draw() {
   BeginTextureMode(target);
 
-  ClearBackground(RAYWHITE);
+  ClearBackground(GRAY);
 
   switch (state) {
   case NOT_SELECTED:
-    DrawText("PRESS B to Browse", 50, 500, 60, BLACK);
+    DrawText("Press B to browse", 300, 400, 50, WHITE);
+    DrawText("Press N to make a new level", 300, 500, 50, WHITE);
     break;
   case BROWSING:
     drawFileSelection();
@@ -160,9 +205,8 @@ void init() {
 
   target = LoadRenderTexture(1280, 720);
 
-  directoryNames.arraySize = -1;
+  directoryNames.lastIndex = -1;
   directoryNames.firstStart = true;
-  directoryNames.showHiddenDirectories = false;
   directoryNames.highlightedDir = 0;
 
   reloadDirectory(currentDir);
