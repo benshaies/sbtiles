@@ -5,6 +5,7 @@
 #include <raylib.h>
 
 typedef enum {
+  FILE_SELECTION,
   TILE_SELECTION,
   LEVEL_EDITING,
 } SBT_STATE;

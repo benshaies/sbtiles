@@ -26,6 +26,7 @@ SB_Level level;
 char levelFilePath[256];
 char tilesetFilePath[256];
 char currentDir[256] = "/home/benja/";
+char currentDirReset[256] = "/home/benja/";
 
 typedef struct {
   bool firstStart;
@@ -97,7 +98,7 @@ void drawFileSelection() {
     }
 
     DrawText(directoryNames.names[i], 300, i * 25 + 75, 20,
-             highlight ? YELLOW : WHITE);
+             highlight ? BLUE : BLACK);
   }
 }
 
@@ -166,6 +167,7 @@ void update() {
   switch (state) {
   case NOT_SELECTED:
     if (IsKeyPressed(KEY_B)) {
+
       state = BROWSING;
     }
     break;
@@ -180,19 +182,19 @@ void update() {
     break;
   case LOADING_FILE:
     level = SB_Level_Load(levelFilePath, true);
-    char oneUp[256];
-    strncpy(oneUp, GetDirectoryPath(levelFilePath), sizeof(oneUp) - 1);
-    oneUp[sizeof(oneUp) - 1] = '\0';
 
-    char twoUp[256];
-    strncpy(twoUp, GetDirectoryPath(oneUp), sizeof(twoUp) - 1);
-    twoUp[sizeof(twoUp) - 1] = '\0';
-    strcpy(tilesetFilePath, twoUp);
+    strcpy(tilesetFilePath, currentDir);
+    int len = strlen(tilesetFilePath);
+    int lastSlashIndex;
 
-    strcat(tilesetFilePath, "/assets/");
-    printf("CURRENT PATH:");
-    printf(level.tileset.fileName);
-    printf("\n");
+    for (int i = 0; i < len - 1; i++) {
+      if (tilesetFilePath[i] == '/') {
+        lastSlashIndex = i;
+      }
+    }
+
+    tilesetFilePath[lastSlashIndex + 1] = '\0';
+    strcat(tilesetFilePath, "assets/");
     strcat(tilesetFilePath, level.tileset.fileName);
 
     level.tileset.texture = LoadTexture(tilesetFilePath);
@@ -202,24 +204,49 @@ void update() {
     state = EDITING;
 
     break;
+  case EDITING:
+    SBTILES_Update(&level, mousePos);
+
+    if (IsKeyDown(KEY_LEFT_CONTROL)) {
+
+      if (IsKeyPressed(KEY_S)) {
+        SB_Level_Save(level, levelFilePath);
+        SB_Level_Free(&level);
+
+        directoryNames.lastIndex = -1;
+        directoryNames.firstStart = true;
+        directoryNames.highlightedDir = 0;
+
+        memset(currentDir, 0, sizeof(currentDir));
+        strcpy(currentDir, currentDirReset);
+
+        reloadDirectory(currentDir);
+
+        state = NOT_SELECTED;
+      }
+    }
+
+    break;
   }
 }
 
 void draw() {
   BeginTextureMode(target);
 
-  ClearBackground(GRAY);
+  ClearBackground(RAYWHITE);
 
   switch (state) {
   case NOT_SELECTED:
-    DrawText("Press B to browse", 300, 400, 50, WHITE);
-    DrawText("Press N to make a new level", 300, 500, 50, WHITE);
+    DrawText("Press B to browse", 300, 400, 50, BLACK);
+    DrawText("Press N to make a new level", 300, 500, 50, BLACK);
     break;
   case BROWSING:
     drawFileSelection();
     break;
   case LOADING_FILE:
     break;
+  case EDITING:
+    SBTILES_Draw(level, 50, 50);
   }
 
   EndTextureMode();
@@ -231,6 +258,8 @@ void init() {
   SetTargetFPS(60);
 
   target = LoadRenderTexture(1280, 720);
+
+  SBTILES_Init(screenWidth, screenHeight);
 
   directoryNames.lastIndex = -1;
   directoryNames.firstStart = true;

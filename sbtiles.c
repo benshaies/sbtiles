@@ -21,33 +21,61 @@ void SBTILES_Init(int windowWidth, int windowHeight) {
 
   sbt.currentState = LEVEL_EDITING;
 
-  sbt.tileSelectionRec = (Rectangle){0, 0, 250, 250};
+  sbt.tileSelectionRec = (Rectangle){0, 0, 500, 500};
 }
 
-void updateCamera() {
+void updateCamera(Vector2 mousePos) {
   int scroll = GetMouseWheelMove();
 
-  if (scroll > 0 && sbt.cam.zoom < 1.5) {
-    sbt.cam.zoom += 0.05;
+  if (scroll != 0) {
+    // Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), sbt.cam);
+
+    if (scroll > 0 && sbt.cam.zoom < 1.5) {
+      sbt.cam.zoom += 0.05f;
+    } else if (scroll < 0 && sbt.cam.zoom >= 0.2f) {
+      sbt.cam.zoom -= 0.05f;
+    }
+
+    // Re-anchor so the same world point stays under the cursor after zooming
+    sbt.cam.offset = mousePos;
     sbt.cam.target = worldMouse;
-  } else if (scroll < 0 && sbt.cam.zoom >= 0.2) {
-    sbt.cam.zoom -= 0.05;
   }
 
   // Reset cam to original
   if (IsKeyPressed(KEY_R)) {
     sbt.cam.target = sbt.cam.offset;
-    sbt.cam.zoom = 1.0;
+    sbt.cam.zoom = 1.0f;
+  }
+
+  static Vector2 dragStartTarget = {0};
+  static Vector2 dragStartMouse = {0};
+  static bool dragging = false;
+
+  if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE)) {
+    dragging = true;
+    dragStartTarget = sbt.cam.target;
+    dragStartMouse = mousePos;
+  }
+
+  if (dragging && IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+    Vector2 delta = {(mousePos.x - dragStartMouse.x) / sbt.cam.zoom,
+                     (mousePos.y - dragStartMouse.y) / sbt.cam.zoom};
+    sbt.cam.target.x = dragStartTarget.x - delta.x;
+    sbt.cam.target.y = dragStartTarget.y - delta.y;
+  }
+
+  if (IsMouseButtonReleased(MOUSE_BUTTON_MIDDLE)) {
+    dragging = false;
   }
 }
 
 void levelEditingUpdate(SB_Level *currentLevel, Vector2 mousePos) {
 
   // update mouse position
-  worldMouse = GetScreenToWorld2D(GetMousePosition(), sbt.cam);
+  worldMouse = GetScreenToWorld2D(mousePos, sbt.cam);
 
   // Update camera
-  updateCamera();
+  updateCamera(mousePos);
 
   // Hide Lines
   if (IsKeyPressed(KEY_TAB)) {
