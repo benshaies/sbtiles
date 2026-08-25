@@ -210,8 +210,6 @@ void SBTILES_Draw(SB_Level currentLevel, int drawTileWidth,
 
   case LEVEL_EDITING:
 
-    DrawText((TextFormat("%d", sbt.currentLayer)), 0, 0, 50, RED);
-
     BeginMode2D(sbt.cam);
 
     SB_Level_Draw(currentLevel, drawTileWidth, drawTileHeight,
@@ -241,6 +239,15 @@ void SBTILES_Draw(SB_Level currentLevel, int drawTileWidth,
     }
 
     EndMode2D();
+
+    if (sbt.showAllLayers) {
+      DrawText("SHOWING ALL LAYERS: EDITOR LOCKED", 20, 650, 35, MAROON);
+      sbt.showTileLines = false;
+    } else {
+      sbt.showTileLines = true;
+      DrawRectangle(0, 0, 75, 75, BLACK);
+      DrawText((TextFormat("%d", sbt.currentLayer)), 25, 25, 50, WHITE);
+    }
 
     break;
   }
