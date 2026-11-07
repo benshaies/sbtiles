@@ -14,7 +14,8 @@ typedef enum {
   NOT_SELECTED,
   BROWSING,
   LOADING_FILE,
-  EDITING
+  EDITING,
+  CREATING_NEW_FILE,
 } Level_Selection_State;
 
 Level_Selection_State state = NOT_SELECTED;
@@ -25,8 +26,10 @@ Vector2 mousePos;
 SB_Level level;
 char levelFilePath[256];
 char tilesetFilePath[256];
-char currentDir[256] = "/home/benja/";
-char currentDirReset[256] = "/home/benja/";
+char currentDir[256] = "/home/benja/coding/";
+char currentDirReset[256] = "/home/benja/coding/";
+
+SB_Tileset tileset;
 
 typedef struct {
   bool firstStart;
@@ -38,6 +41,13 @@ typedef struct {
 DirectoryFolderNames directoryNames;
 
 FilePathList files;
+
+char newFileDirectory[250];
+char newFileName[256];
+bool selectingNewFileDir = true;
+int layers, tileSize, rows, cols;
+char tilesetName[128];
+int editing = 0;
 
 void reloadDirectory(const char *directory) {
 
@@ -102,8 +112,10 @@ void drawFileSelection() {
   }
 }
 
-// Returns 1 if .sblevel file is selected and found otherwise returns 0
-int updateFileSelection() {
+// Returns
+// 1 - .sblevel file found
+// 2 - New file directory selected
+int updateFileSelection(bool creatingFile) {
 
   // Scroll Down
   if (IsKeyPressed(KEY_J)) {
@@ -129,16 +141,32 @@ int updateFileSelection() {
     strcpy(temp, currentDir);
     strcat(temp, directoryNames.names[directoryNames.highlightedDir]);
 
-    // Check if its a file selection
-    if (!DirectoryExists(temp)) {
-      printf("FOUND .sblevel FILE!\n");
-      strcpy(levelFilePath, temp);
-      return 1;
-
-    } else {
+    if (DirectoryExists(temp)) {
       strcat(currentDir, directoryNames.names[directoryNames.highlightedDir]);
       strcat(currentDir, "/");
       reloadDirectory(currentDir);
+    }
+  }
+
+  if (IsKeyPressed(KEY_ENTER)) {
+    char temp[256];
+    strcpy(temp, currentDir);
+    strcat(temp, directoryNames.names[directoryNames.highlightedDir]);
+
+    // Check if its a file selection
+    if (!DirectoryExists(temp)) {
+      if (IsFileExtension(directoryNames.names[directoryNames.highlightedDir],
+                          ".sblevel")) {
+        printf("FOUND .sblevel FILE!\n");
+        strcpy(levelFilePath, temp);
+        return 1;
+      }
+    } else if (creatingFile) {
+      strcat(currentDir, directoryNames.names[directoryNames.highlightedDir]);
+      strcat(currentDir, "/");
+      strcpy(newFileDirectory, currentDir);
+      reloadDirectory(currentDir);
+      return 2;
     }
   }
 
@@ -163,16 +191,87 @@ int updateFileSelection() {
   return 0;
 }
 
+int creatingNewFileUpdate() {
+  if (selectingNewFileDir) {
+    if (updateFileSelection(true) == 2) {
+      selectingNewFileDir = false;
+    }
+  }
+}
+
+void drawNewFileCreation() {
+
+  int oldTextSize = GuiGetStyle(DEFAULT, TEXT_SIZE);
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 30);        // bigger text, restored at the end
+
+    const float labelX = 120, labelW = 440;
+    const float boxX   = 580, boxW   = 580;
+    const float boxH   = 64;
+    const float startY = 50;
+    const float gap    = 84;                    // distance between rows
+
+    GuiLabel((Rectangle){labelX, startY + gap * 0, labelW, boxH}, "LEVEL_NAME");
+    if (GuiTextBox((Rectangle){boxX, startY + gap * 0, boxW, boxH}, newFileName, sizeof(newFileName), editing == 6)) editing = (editing == 6) ? 0 : 6;
+
+    GuiLabel((Rectangle){labelX, startY + gap * 1, labelW, boxH}, "LAYER_COUNT");
+    if (GuiValueBox((Rectangle){boxX, startY + gap * 1, boxW, boxH}, NULL, &layers, 1, 16, editing == 1)) editing = (editing == 1) ? 0 : 1;
+
+    GuiLabel((Rectangle){labelX, startY + gap * 2, labelW, boxH}, "TILESET_FILENAME");
+    if (GuiTextBox((Rectangle){boxX, startY + gap * 2, boxW, boxH}, tilesetName, sizeof(tilesetName), editing == 2)) editing = (editing == 2) ? 0 : 2;
+
+    GuiLabel((Rectangle){labelX, startY + gap * 3, labelW, boxH}, "TILESET_TILESIZE");
+    if (GuiValueBox((Rectangle){boxX, startY + gap * 3, boxW, boxH}, NULL, &tileSize, 1, 256, editing == 3)) editing = (editing == 3) ? 0 : 3;
+
+    GuiLabel((Rectangle){labelX, startY + gap * 4, labelW, boxH}, "ARRAY_ROWS");
+    if (GuiValueBox((Rectangle){boxX, startY + gap * 4, boxW, boxH}, NULL, &rows, 1, 1000, editing == 4)) editing = (editing == 4) ? 0 : 4;
+
+    GuiLabel((Rectangle){labelX, startY + gap * 5, labelW, boxH}, "ARRAY_COLS");
+    if (GuiValueBox((Rectangle){boxX, startY + gap * 5, boxW, boxH}, NULL, &cols, 1, 1000, editing == 5)) editing = (editing == 5) ? 0 : 5;
+
+    bool createClicked = GuiButton((Rectangle){labelX, startY + gap * 6 + 10, 1040, 80}, "Create");
+
+    GuiSetStyle(DEFAULT, TEXT_SIZE, oldTextSize);
+ 
+  if(IsFileExtension(newFileName, ".sblevel") && createClicked){
+    strcat(newFileDirectory, newFileName);
+    strcpy(levelFilePath, newFileDirectory);
+    
+    level = SB_Level_Init(layers, rows, cols, tilesetName, tileSize);
+    SB_Level_Save(level, newFileDirectory);
+
+    char assetDir[512];
+    const char *lastSlash = strrchr(levelFilePath, '/');
+
+    if (lastSlash) {
+      int dirLen = (int)(lastSlash - levelFilePath);
+      snprintf(assetDir, sizeof(assetDir), "%.*s/../assets", dirLen,
+               levelFilePath);
+    } else {
+      snprintf(assetDir, sizeof(assetDir), "../assets");
+    }
+
+    tileset = SB_Tileset_Init(assetDir, level.tilesetName, level.tileSize);
+
+
+    state = EDITING;
+    
+
+  }
+}
+
 void update() {
   switch (state) {
   case NOT_SELECTED:
     if (IsKeyPressed(KEY_B)) {
 
       state = BROWSING;
+    } else if (IsKeyPressed(KEY_N)) {
+      state = CREATING_NEW_FILE;
     }
+
     break;
   case BROWSING:
-    int i = updateFileSelection();
+    int i = updateFileSelection(false);
 
     if (i == 1) {
       state = LOADING_FILE;
@@ -181,31 +280,26 @@ void update() {
     }
     break;
   case LOADING_FILE:
-    level = SB_Level_Load(levelFilePath, true);
+    level = SB_Level_Load(levelFilePath);
 
-    strcpy(tilesetFilePath, currentDir);
-    int len = strlen(tilesetFilePath);
-    int lastSlashIndex;
+    char assetDir[512];
+    const char *lastSlash = strrchr(levelFilePath, '/');
 
-    for (int i = 0; i < len - 1; i++) {
-      if (tilesetFilePath[i] == '/') {
-        lastSlashIndex = i;
-      }
+    if (lastSlash) {
+      int dirLen = (int)(lastSlash - levelFilePath);
+      snprintf(assetDir, sizeof(assetDir), "%.*s/../assets", dirLen,
+               levelFilePath);
+    } else {
+      snprintf(assetDir, sizeof(assetDir), "../assets");
     }
 
-    tilesetFilePath[lastSlashIndex + 1] = '\0';
-    strcat(tilesetFilePath, "assets/");
-    strcat(tilesetFilePath, level.tileset.fileName);
-
-    level.tileset.texture = LoadTexture(tilesetFilePath);
-    level.tileset.cols = level.tileset.texture.width / level.tileset.tileSize;
-    level.tileset.rows = level.tileset.texture.height / level.tileset.tileSize;
+    tileset = SB_Tileset_Init(assetDir, level.tilesetName, level.tileSize);
 
     state = EDITING;
 
     break;
   case EDITING:
-    SBTILES_Update(&level, mousePos);
+    SBTILES_Update(&level, tileset, mousePos);
 
     if (IsKeyDown(KEY_LEFT_CONTROL)) {
 
@@ -225,8 +319,9 @@ void update() {
         state = NOT_SELECTED;
       }
     }
-
     break;
+  case CREATING_NEW_FILE:
+    creatingNewFileUpdate();
   }
 }
 
@@ -237,8 +332,8 @@ void draw() {
 
   switch (state) {
   case NOT_SELECTED:
-    DrawText("Press B to browse", 300, 400, 50, BLACK);
-    DrawText("Press N to make a new level", 300, 500, 50, BLACK);
+    DrawText("B - Select File", 400, 300, 50, BLACK);
+    DrawText("N - New File", 400, 500, 50, BLACK);
     break;
   case BROWSING:
     drawFileSelection();
@@ -246,7 +341,14 @@ void draw() {
   case LOADING_FILE:
     break;
   case EDITING:
-    SBTILES_Draw(level, 50, 50);
+    SBTILES_Draw(level, tileset, 50, 50);
+    break;
+  case CREATING_NEW_FILE:
+    if (selectingNewFileDir) {
+      drawFileSelection();
+    } else {
+      drawNewFileCreation();
+    }
   }
 
   EndTextureMode();

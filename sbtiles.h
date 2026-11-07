@@ -31,9 +31,9 @@ extern SBTILES sbt;
 void SBTILES_Init(int windowWidth, int windowHeight);
 
 // All main updates to sbTiles
-void SBTILES_Update(SB_Level *currentLevel, Vector2 mousePos);
+void SBTILES_Update(SB_Level *currentLevel, SB_Tileset tileset, Vector2 mousePos);
 
 // All drawing to sbTiles
-void SBTILES_Draw(SB_Level currentLevel, int drawTileWidth, int drawTileHeight);
+void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth, int drawTileHeight);
 
 #endif

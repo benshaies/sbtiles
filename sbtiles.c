@@ -1,4 +1,5 @@
 #include "sbtiles.h"
+#include "sblib/include/sblib.h"
 #include <raylib.h>
 #include <stdio.h>
 
@@ -130,7 +131,7 @@ void levelEditingUpdate(SB_Level *currentLevel, Vector2 mousePos) {
   }
 }
 
-void tileSelectionUpdate(SB_Level *currentLevel, Vector2 mousePos) {
+void tileSelectionUpdate(SB_Level *currentLevel, SB_Tileset tileset, Vector2 mousePos) {
   if (IsKeyDown(KEY_UP)) {
     sbt.tileSelectionRec.width *= 1.025;
     sbt.tileSelectionRec.height *= 1.025;
@@ -143,26 +144,26 @@ void tileSelectionUpdate(SB_Level *currentLevel, Vector2 mousePos) {
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
       CheckCollisionPointRec(mousePos, sbt.tileSelectionRec)) {
     int currentTileWidth =
-        sbt.tileSelectionRec.width / currentLevel->tileset.cols;
+        sbt.tileSelectionRec.width / tileset.cols;
     int currentTileHeight =
-        sbt.tileSelectionRec.height / currentLevel->tileset.rows;
+        sbt.tileSelectionRec.height / tileset.rows;
 
     int col = (int)(mousePos.x - sbt.tileSelectionRec.x) / currentTileWidth;
     int row = (int)(mousePos.y - sbt.tileSelectionRec.y) / currentTileHeight;
 
-    int selectedTile = row * currentLevel->tileset.cols + col;
+    int selectedTile = row * tileset.cols + col;
 
     sbt.selectedTile = selectedTile;
   }
 }
 
-void SBTILES_Update(SB_Level *currentLevel, Vector2 mousePos) {
+void SBTILES_Update(SB_Level *currentLevel, SB_Tileset tileset, Vector2 mousePos) {
   switch (sbt.currentState) {
   case TILE_SELECTION:
     if (IsKeyPressed(KEY_F2)) {
       sbt.currentState = LEVEL_EDITING;
     }
-    tileSelectionUpdate(currentLevel, mousePos);
+    tileSelectionUpdate(currentLevel, tileset, mousePos);
     break;
 
   case LEVEL_EDITING:
@@ -177,34 +178,34 @@ void SBTILES_Update(SB_Level *currentLevel, Vector2 mousePos) {
 }
 
 // Drawing tilesecxtion
-void drawTileset(SB_Level currentLevel) {
+void drawTileset(SB_Level currentLevel, SB_Tileset tileset) {
 
   Rectangle sourceRec = {
-      0, 0, currentLevel.tileset.cols * currentLevel.tileset.tileSize,
-      currentLevel.tileset.rows * currentLevel.tileset.tileSize};
+      0, 0, tileset.cols * tileset.tileSize,
+      tileset.rows * tileset.tileSize};
 
-  DrawTexturePro(currentLevel.tileset.texture, sourceRec, sbt.tileSelectionRec,
+  DrawTexturePro(tileset.texture, sourceRec, sbt.tileSelectionRec,
                  (Vector2){0, 0}, 0.0, WHITE);
 
   // Highlight current selected Tile
   Rectangle highlightRec = {
-      (sbt.selectedTile % currentLevel.tileset.cols) *
-          (sbt.tileSelectionRec.width / currentLevel.tileset.cols),
-      (sbt.selectedTile / currentLevel.tileset.cols) *
-          (sbt.tileSelectionRec.height / currentLevel.tileset.rows),
-      sbt.tileSelectionRec.width / currentLevel.tileset.cols,
-      sbt.tileSelectionRec.height / currentLevel.tileset.rows,
+      (sbt.selectedTile % tileset.cols) *
+          (sbt.tileSelectionRec.width / tileset.cols),
+      (sbt.selectedTile / tileset.cols) *
+          (sbt.tileSelectionRec.height / tileset.rows),
+      sbt.tileSelectionRec.width / tileset.cols,
+      sbt.tileSelectionRec.height / tileset.rows,
   };
 
   DrawRectangleRec(highlightRec, Fade(BLUE, 0.5));
 }
 
-void SBTILES_Draw(SB_Level currentLevel, int drawTileWidth,
+void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth,
                   int drawTileHeight) {
 
   switch (sbt.currentState) {
   case TILE_SELECTION:
-    drawTileset(currentLevel);
+    drawTileset(currentLevel, tileset);
 
     break;
 
@@ -212,7 +213,7 @@ void SBTILES_Draw(SB_Level currentLevel, int drawTileWidth,
 
     BeginMode2D(sbt.cam);
 
-    SB_Level_Draw(currentLevel, drawTileWidth, drawTileHeight,
+    SB_Level_Draw(currentLevel, tileset,  drawTileWidth, drawTileHeight,
                   sbt.showAllLayers ? -1 : sbt.currentLayer);
 
     sbt.currentDrawSize = (Vector2){drawTileWidth, drawTileHeight};
