@@ -26,8 +26,8 @@ Vector2 mousePos;
 SB_Level level;
 char levelFilePath[256];
 char tilesetFilePath[256];
-char currentDir[256] = "/home/benja/coding/";
-char currentDirReset[256] = "/home/benja/coding/";
+char currentDir[256] = "/home/benja/coding/codingProjects/test/";
+char currentDirReset[256] = "/home/benja/coding/codingProjects/test/";
 
 SB_Tileset tileset;
 
@@ -108,7 +108,7 @@ void drawFileSelection() {
     }
 
     DrawText(directoryNames.names[i], 300, i * 25 + 75, 20,
-             highlight ? BLUE : BLACK);
+             highlight ? YELLOW : WHITE);
   }
 }
 
@@ -328,12 +328,12 @@ void update() {
 void draw() {
   BeginTextureMode(target);
 
-  ClearBackground(RAYWHITE);
+  ClearBackground(BLACK);
 
   switch (state) {
   case NOT_SELECTED:
-    DrawText("B - Select File", 400, 300, 50, BLACK);
-    DrawText("N - New File", 400, 500, 50, BLACK);
+    DrawText("B - Select File", 400, 300, 50, WHITE);
+    DrawText("N - New File", 400, 500, 50, WHITE);
     break;
   case BROWSING:
     drawFileSelection();

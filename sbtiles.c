@@ -86,6 +86,9 @@ void levelEditingUpdate(SB_Level *currentLevel, Vector2 mousePos) {
   // Show all layers
   if (IsKeyPressed(KEY_L)) {
     sbt.showAllLayers = !sbt.showAllLayers;
+    if(!sbt.showAllLayers){
+      sbt.showTileLines = true;
+    }
   }
 
   // filler
@@ -123,7 +126,7 @@ void levelEditingUpdate(SB_Level *currentLevel, Vector2 mousePos) {
 
     // Change layers
     if (IsKeyPressed(KEY_UP) &&
-        sbt.currentLayer <= currentLevel->layerCount - 1) {
+        sbt.currentLayer < currentLevel->layerCount - 1) {
       sbt.currentLayer++;
     } else if (IsKeyPressed(KEY_DOWN) && sbt.currentLayer > 0) {
       sbt.currentLayer--;
@@ -200,6 +203,12 @@ void drawTileset(SB_Level currentLevel, SB_Tileset tileset) {
   DrawRectangleRec(highlightRec, Fade(BLUE, 0.5));
 }
 
+void drawLayerDisplay(int layerCount, int currentLayer){
+  for(int i = 0; i < layerCount; i++){
+    DrawRectangle(25, 675 - 50 * i, 50, 25, currentLayer==i ? YELLOW : WHITE);
+  }
+}
+
 void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth,
                   int drawTileHeight) {
 
@@ -228,13 +237,13 @@ void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth,
                      (Vector2){j * drawTileWidth,
                                currentLevel.layer[sbt.currentLayer].rows *
                                    drawTileHeight},
-                     7.5, BLACK);
+                     2.0, WHITE);
 
           DrawLineEx((Vector2){0, i * drawTileHeight},
                      (Vector2){drawTileWidth *
                                    currentLevel.layer[sbt.currentLayer].cols,
                                i * drawTileHeight},
-                     7.5, BLACK);
+                     2.0, WHITE);
         }
       }
     }
@@ -245,9 +254,7 @@ void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth,
       DrawText("SHOWING ALL LAYERS: EDITOR LOCKED", 20, 650, 35, MAROON);
       sbt.showTileLines = false;
     } else {
-      sbt.showTileLines = true;
-      DrawRectangle(0, 0, 75, 75, BLACK);
-      DrawText((TextFormat("%d", sbt.currentLayer)), 25, 25, 50, WHITE);
+      drawLayerDisplay(currentLevel.layerCount, sbt.currentLayer);
     }
 
     break;

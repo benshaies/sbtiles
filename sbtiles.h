@@ -23,6 +23,7 @@ typedef struct {
   SBT_STATE currentState;
 
   Rectangle tileSelectionRec;
+  
 
 } SBTILES;
 extern SBTILES sbt;
