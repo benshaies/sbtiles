@@ -26,10 +26,12 @@ Vector2 mousePos;
 SB_Level level;
 char levelFilePath[256];
 char tilesetFilePath[256];
-char currentDir[256] = "/home/benja/coding/codingProjects/test/";
-char currentDirReset[256] = "/home/benja/coding/codingProjects/test/";
+char currentDir[256] = "/home/benja/coding/myGames";
+char currentDirReset[256] = "/home/benja/coding/myGames";
 
 SB_Tileset tileset;
+
+
 
 typedef struct {
   bool firstStart;
@@ -303,7 +305,7 @@ void update() {
 
     if (IsKeyDown(KEY_LEFT_CONTROL)) {
 
-      if (IsKeyPressed(KEY_S)) {
+      if (IsKeyPressed(KEY_C)) {
         SB_Level_Save(level, levelFilePath);
         SB_Level_Free(&level);
 
@@ -317,6 +319,9 @@ void update() {
         reloadDirectory(currentDir);
 
         state = NOT_SELECTED;
+      }
+      else if(IsKeyPressed(KEY_S)){
+        SB_Level_Save(level, levelFilePath);
       }
     }
     break;
@@ -368,6 +373,7 @@ void init() {
   directoryNames.highlightedDir = 0;
 
   reloadDirectory(currentDir);
+
 }
 
 int main() {
