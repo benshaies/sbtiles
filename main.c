@@ -72,13 +72,13 @@ Notification createNotification(const char *text, float timeBase, float size){
   return noti;
 }
 
-void updateNotification(Notification noti){
-  if(noti.active){
-    noti.timer -= GetFrameTime();
+void updateNotification(Notification *noti){
+  if(noti->active){
+    noti->timer -= GetFrameTime();
     
-    if(noti.timer <= 0){
-      noti.active = false;
-      noti.timer = noti.timeBase;
+    if(noti->timer <= 0){
+      noti->active = false;
+      noti->timer = noti->timeBase;
     }
   }
 }
@@ -86,7 +86,7 @@ void updateNotification(Notification noti){
 void displayNotification(Notification noti){
   
   if(noti.active){
-    DrawText(noti.text, noti.pos.x, noti.pos.y, noti.size, WHITE);
+    DrawText(noti.text, noti.pos.x, noti.pos.y, noti.size, MAROON);
   }
 }
 
@@ -373,7 +373,7 @@ void update() {
     creatingNewFileUpdate();
   }
 
-  updateNotification(testing);
+  updateNotification(&testing);
 }
 
 void draw() {
