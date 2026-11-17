@@ -31,8 +31,6 @@ char currentDirReset[256] = "/home/benja/coding/myGames";
 
 SB_Tileset tileset;
 
-
-
 typedef struct {
   bool firstStart;
   char *names[256];
@@ -50,6 +48,47 @@ bool selectingNewFileDir = true;
 int layers, tileSize, rows, cols;
 char tilesetName[128];
 int editing = 0;
+
+typedef struct{
+  const char *text;
+  bool active;
+  float timer;
+  float timeBase;
+  Vector2 pos;
+  float size;
+}Notification;
+
+Notification testing;
+
+Notification createNotification(const char *text, float timeBase, float size){
+  Notification noti;
+
+  noti.text = text;
+  noti.timeBase = timeBase;
+  noti.timer = timeBase;
+  noti.active = true;
+  noti.size = size;
+
+  return noti;
+}
+
+void updateNotification(Notification noti){
+  if(noti.active){
+    noti.timer -= GetFrameTime();
+    
+    if(noti.timer <= 0){
+      noti.active = false;
+      noti.timer = noti.timeBase;
+    }
+  }
+}
+
+void displayNotification(Notification noti){
+  
+  if(noti.active){
+    DrawText(noti.text, noti.pos.x, noti.pos.y, noti.size, WHITE);
+  }
+}
 
 void reloadDirectory(const char *directory) {
 
@@ -262,6 +301,7 @@ void drawNewFileCreation() {
 }
 
 void update() {
+
   switch (state) {
   case NOT_SELECTED:
     if (IsKeyPressed(KEY_B)) {
@@ -269,6 +309,10 @@ void update() {
       state = BROWSING;
     } else if (IsKeyPressed(KEY_N)) {
       state = CREATING_NEW_FILE;
+    }
+
+    if(IsKeyPressed(KEY_SPACE)){
+        testing = createNotification("TESTING!", 5, 100);
     }
 
     break;
@@ -328,6 +372,8 @@ void update() {
   case CREATING_NEW_FILE:
     creatingNewFileUpdate();
   }
+
+  updateNotification(testing);
 }
 
 void draw() {
@@ -355,6 +401,8 @@ void draw() {
       drawNewFileCreation();
     }
   }
+
+  displayNotification(testing);
 
   EndTextureMode();
   SB_GameResolution_Draw((Vector2){screenWidth, screenHeight}, &target,
