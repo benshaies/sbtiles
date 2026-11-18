@@ -6,6 +6,7 @@
 #include <string.h>
 #define RAYGUI_IMPLEMENTATION
 #include "external/raygui.h"
+#include "external/tinyfiledialogs.h"
 
 const int screenWidth = 1280;
 const int screenHeight = 720;
@@ -84,7 +85,6 @@ void updateNotification(Notification *noti){
 }
 
 void displayNotification(Notification noti){
-  
   if(noti.active){
     DrawText(noti.text, noti.pos.x, noti.pos.y, noti.size, MAROON);
   }
@@ -312,7 +312,18 @@ void update() {
     }
 
     if(IsKeyPressed(KEY_SPACE)){
-        testing = createNotification("TESTING!", 5, 100);
+      if (IsKeyPressed(KEY_SPACE)) {
+  const char *filters[1] = { "*.sblevel" };
+  const char *result = tinyfd_openFileDialog(
+      "Open level", "/home/benja/coding/myGames/", 1, filters,
+      "sbTiles levels", 0);
+
+  if (result) {
+    printf("Picked: %s\n", result);
+  } else {
+    printf("Cancelled\n");
+  }
+}
     }
 
     break;
@@ -383,7 +394,7 @@ void draw() {
 
   switch (state) {
   case NOT_SELECTED:
-    DrawText("B - Select File", 400, 300, 50, WHITE);
+    DrawText("E - Select File", 400, 300, 50, WHITE);
     DrawText("N - New File", 400, 500, 50, WHITE);
     break;
   case BROWSING:
@@ -402,7 +413,6 @@ void draw() {
     }
   }
 
-  displayNotification(testing);
 
   EndTextureMode();
   SB_GameResolution_Draw((Vector2){screenWidth, screenHeight}, &target,
