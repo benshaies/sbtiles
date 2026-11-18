@@ -41,9 +41,10 @@ endif()
 file(GLOB SBLIB_SRC "sblib/src/*.c")
 set(SBTILES_SRC "sbtiles.c")
 file(GLOB EXT_SRC "external/*.c")
+file(GLOB SRC "src/*.c")
 
 # Create executable
-add_executable(${PROJECT_NAME} main.c ${SBLIB_SRC} ${SBTILES_SRC} ${EXT_SRC})
+add_executable(${PROJECT_NAME} main.c ${SRC} ${SBLIB_SRC} ${SBTILES_SRC} ${EXT_SRC})
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # Link libraries

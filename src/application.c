@@ -1,6 +1,8 @@
 #include "../include/application.h"
 #include <raylib.h>
 #define RAYGUI_IMPLEMENTATION
+#include "../external/raygui.h";
+
 
 const int screenWidth = 1280;
 const int screenHeight = 720;
@@ -9,6 +11,16 @@ RenderTexture2D target;
 Vector2 mousePos;
 
 Application app;
+
+char newLevelPath[512];
+char formError[128] = "";
+bool createRequested = false;
+bool cancelRequested = false;
+
+
+/***********************NEW FILE CREATTION********************/
+
+
 
 void appInit() {
   InitWindow(screenWidth, screenHeight, "SB_Tiles");
@@ -96,3 +108,4 @@ void appDraw() {
   SB_GameResolution_Draw((Vector2){screenWidth, screenHeight}, &target,
                          &mousePos);
 }
+
