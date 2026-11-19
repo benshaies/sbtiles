@@ -1,7 +1,8 @@
 #include "../include/application.h"
 #include <raylib.h>
 #define RAYGUI_IMPLEMENTATION
-#include "../external/raygui.h";
+#include "../external/raygui.h"
+
 
 
 const int screenWidth = 1280;
@@ -11,11 +12,7 @@ RenderTexture2D target;
 Vector2 mousePos;
 
 Application app;
-
-char newLevelPath[512];
-char formError[128] = "";
-bool createRequested = false;
-bool cancelRequested = false;
+NewLevelConfig newParam;
 
 
 /***********************NEW FILE CREATTION********************/
@@ -31,6 +28,7 @@ void appInit() {
   target = LoadRenderTexture(1280, 720);
 
   SBTILES_Init(screenWidth, screenHeight);
+
 }
 
 void appUpdate() {
@@ -39,7 +37,6 @@ void appUpdate() {
     if (IsKeyPressed(KEY_N)) {
       app.state = CREATING_NEW_FILE;
     }
-
     if (IsKeyPressed(KEY_E)) {
       const char *filters[1] = {"*.sblevel"};
       const char *result =
@@ -83,6 +80,7 @@ void appUpdate() {
 
     break;
   case CREATING_NEW_FILE:
+    newLevelPrompt(&newParam) ;
   }
 }
 
