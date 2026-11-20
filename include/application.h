@@ -1,6 +1,6 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
-#include "../external/tinyfiledialogs.h";
+#include "../external/tinyfiledialogs.h"
 #include "../sblib/include/sblib.h"
 #include "../sbtiles.h"
 #include <raylib.h>
@@ -22,6 +22,7 @@ typedef struct {
   char levelFilePath[256];
   char tilesetFilePath[256];
   AppState state;
+  bool levelFreed;
 } Application;
 
 void appInit();

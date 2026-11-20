@@ -1,5 +1,6 @@
 #include "../include/application.h"
 #include <raylib.h>
+#include <string.h>
 #define RAYGUI_IMPLEMENTATION
 #include "../external/raygui.h"
 
@@ -12,7 +13,7 @@ RenderTexture2D target;
 Vector2 mousePos;
 
 Application app;
-NewLevelConfig newParam;
+NewLevelConfig newFileConfig;
 
 
 /***********************NEW FILE CREATTION********************/
@@ -24,6 +25,7 @@ void appInit() {
   SetTargetFPS(60);
 
   app.state = NOT_SELECTED;
+  app.levelFreed = true; // Initial startup no need to free
 
   target = LoadRenderTexture(1280, 720);
 
@@ -34,6 +36,14 @@ void appInit() {
 void appUpdate() {
   switch (app.state) {
   case NOT_SELECTED:
+
+    // Free level if needed
+    if(!app.levelFreed){
+      SB_Level_Free(&app.level);
+      SB_Tileset_Free(&app.tileset);
+      app.levelFreed = true;
+    }
+
     if (IsKeyPressed(KEY_N)) {
       app.state = CREATING_NEW_FILE;
     }
@@ -52,7 +62,6 @@ void appUpdate() {
         printf("Cancelled\n");
       }
     }
-
     break;
   case LOADING_FILE:
     app.level = SB_Level_Load(app.levelFilePath);
@@ -63,6 +72,8 @@ void appUpdate() {
     app.tileset =
         SB_Tileset_Init(assetDir, app.level.tilesetName, app.level.tileSize);
 
+
+
     app.state = EDITING;
 
     break;
@@ -71,16 +82,30 @@ void appUpdate() {
 
     if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_C)) {
       SB_Level_Save(app.level, app.levelFilePath);
-      SB_Level_Free(&app.level);
-      SB_Tileset_Free(&app.tileset);
+      app.levelFreed = false;
       app.state = NOT_SELECTED;
-    } else if (IsKeyPressed(KEY_S)) {
+    } else if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_S)) {
       SB_Level_Save(app.level, app.levelFilePath);
     }
 
     break;
   case CREATING_NEW_FILE:
-    newLevelPrompt(&newParam) ;
+    bool newFile = newLevelPrompt(&newFileConfig);
+
+    if(!newFile){
+      app.state = NOT_SELECTED;
+    }
+    else{
+      app.level = SB_Level_Init(newFileConfig.layers, newFileConfig.rows, newFileConfig.cols, newFileConfig.tilesetName, newFileConfig.tileSize);
+      char assetDir[512];
+      snprintf(assetDir, sizeof(assetDir), "%s/../assets", GetDirectoryPath(newFileConfig.path));
+      app.tileset = SB_Tileset_Init(assetDir, app.level.tilesetName, app.level.tileSize);
+
+      strcpy(app.levelFilePath, newFileConfig.path);
+      strcpy(app.tilesetFilePath, assetDir); 
+      
+      app.state = EDITING;
+    }
   }
 }
 
