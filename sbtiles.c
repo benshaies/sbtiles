@@ -203,14 +203,14 @@ void drawTileset(SB_Level currentLevel, SB_Tileset tileset) {
   DrawRectangleRec(highlightRec, Fade(BLUE, 0.5));
 }
 
-void drawLayerDisplay(int layerCount, int currentLayer){
+void drawLayerDisplay(int layerCount, int currentLayer, Color color){
   for(int i = 0; i < layerCount; i++){
-    DrawRectangle(25, 675 - 50 * i, 50, 25, currentLayer==i ? YELLOW : WHITE);
+    DrawRectangle(25, 675 - 50 * i, 50, 25, currentLayer==i ? YELLOW : color);
   }
 }
 
 void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth,
-                  int drawTileHeight) {
+                  int drawTileHeight, Color secondaryColor) {
 
   switch (sbt.currentState) {
   case TILE_SELECTION:
@@ -237,13 +237,13 @@ void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth,
                      (Vector2){j * drawTileWidth,
                                currentLevel.layer[sbt.currentLayer].rows *
                                    drawTileHeight},
-                     2.0, WHITE);
+                     2.0, secondaryColor);
 
           DrawLineEx((Vector2){0, i * drawTileHeight},
                      (Vector2){drawTileWidth *
                                    currentLevel.layer[sbt.currentLayer].cols,
                                i * drawTileHeight},
-                     2.0, WHITE);
+                     2.0, secondaryColor);
         }
       }
     }
@@ -251,10 +251,10 @@ void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth,
     EndMode2D();
 
     if (sbt.showAllLayers) {
-      DrawText("SHOWING ALL LAYERS: EDITOR LOCKED", 20, 650, 35, MAROON);
+      DrawText("SHOWING ALL LAYERS: EDITOR LOCKED", 20, 650, 35, secondaryColor);
       sbt.showTileLines = false;
     } else {
-      drawLayerDisplay(currentLevel.layerCount, sbt.currentLayer);
+      drawLayerDisplay(currentLevel.layerCount, sbt.currentLayer, secondaryColor);
     }
 
     break;

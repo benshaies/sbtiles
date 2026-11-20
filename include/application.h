@@ -23,6 +23,11 @@ typedef struct {
   char tilesetFilePath[256];
   AppState state;
   bool levelFreed;
+
+  // Background color
+  Color color;
+  int colorIndex;
+
 } Application;
 
 void appInit();

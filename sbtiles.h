@@ -35,6 +35,6 @@ void SBTILES_Init(int windowWidth, int windowHeight);
 void SBTILES_Update(SB_Level *currentLevel, SB_Tileset tileset, Vector2 mousePos);
 
 // All drawing to sbTiles
-void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth, int drawTileHeight);
+void SBTILES_Draw(SB_Level currentLevel, SB_Tileset tileset, int drawTileWidth, int drawTileHeight, Color secondaryColor);
 
 #endif
